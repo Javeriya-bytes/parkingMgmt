@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card">
+    <h2>Enter Vehicle Number</h2>
+    <p>Enter vehicle number from receipt (e.g. 22K989)</p>
+
+    <form method="post" id="qr-scan-form">
+        {% csrf_token %}
+        <p>
+            <label for="qr-input">Vehicle Number</label>
+            <input id="qr-input" type="text" name="qr_data"
+                   placeholder="Enter vehicle number (e.g. 22K989)" required>
+        </p>
+
+        <button type="submit">Search</button>
+
+        <p id="scan-loading" style="display:none;">Searching...</p>
+        <p id="scan-error" class="msg" style="display:none; color:red;"></p>
+    </form>
+</div>
+
+<div class="card" id="scan-result" style="display:none;">
+    <h3>Result</h3>
+
+    <p><strong>Vehicle:</strong> <span id="res-vehicle"></span></p>
+    <p><strong>Owner:</strong> <span id="res-owner"></span></p>
+    <p><strong>Email:</strong> <span id="res-owner-email"></span></p>
+    <p><strong>Slot:</strong> <span id="res-slot"></span></p>
+    <p><strong>Entry:</strong> <span id="res-entry"></span></p>
+    <p><strong>Exit:</strong> <span id="res-exit"></span></p>
+    <p><strong>Duration:</strong> <span id="res-duration"></span></p>
+    <p><strong>Amount:</strong> <span id="res-amount"></span></p>
+
+    <!-- QR Code -->
+    <div id="res-qr-wrap" style="display:none; text-align:center; margin-top:16px;">
+        <p><strong>QR Code</strong></p>
+        <img id="res-qr-img" src="" alt="QR Code"
+             style="width:150px; height:150px; border:1px solid #ccc; padding:6px; border-radius:8px;">
+        <p id="res-qr-label" style="font-size:12px; color:#666; margin-top:4px;"></p>
+    </div>
+
+    <!-- Buttons -->
+    <div id="res-actions" style="display:none; margin-top:20px; display:flex; gap:12px; flex-wrap:wrap;">
+        <a id="res-pdf-btn" href="#" target="_blank"
+           style="padding:10px 20px; background:#0a4f7f; color:#fff; border-radius:6px; text-decoration:none; font-weight:bold;">
+            ⬇ Download PDF Receipt
+        </a>
+        <a id="res-receipt" href="#" style="display:none; padding:10px 20px; background:#198754;
+           color:#fff; border-radius:6px; text-decoration:none; font-weight:bold;">
+            📄 Full Receipt
+        </a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const form = document.getElementById('qr-scan-form');
+    const loading = document.getElementById('scan-loading');
+    const errorBox = document.getElementById('scan-error');
+    const resultBox = document.getElementById('scan-result');
+
+    function clearResult() {
+        document.querySelectorAll("#scan-result span").forEach(el => el.textContent = '');
+        document.getElementById('res-receipt').style.display = 'none';
+        document.getElementById('res-qr-wrap').style.display = 'none';
+        document.getElementById('res-actions').style.display = 'none';
+        resultBox.style.display = 'none';
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        errorBox.style.display = 'none';
+        errorBox.textContent = '';
+        clearResult();
+        loading.style.display = 'block';
+
+        const formData = new FormData(form);
+
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+        .then(async (resp) => {
+            const data = await resp.json();
+            if (!resp.ok || !data.success) throw new Error(data.error || 'Vehicle not found');
+            return data;
+        })
+        .then((data) => {
+
+            resultBox.style.display = 'block';
+
+            document.getElementById('res-vehicle').textContent = data.vehicle_number;
+            document.getElementById('res-owner').textContent = data.owner;
+            document.getElementById('res-owner-email').textContent = data.owner_email;
+            document.getElementById('res-slot').textContent = data.slot;
+            document.getElementById('res-entry').textContent = data.entry_time;
+            document.getElementById('res-exit').textContent = data.exit_time;
+            document.getElementById('res-duration').textContent = data.duration;
+            document.getElementById('res-amount').textContent = '₹ ' + Number(data.amount).toFixed(2);
+
+            // Show QR code
+            if (data.qr_image_url) {
+                document.getElementById('res-qr-img').src = data.qr_image_url;
+                document.getElementById('res-qr-label').textContent = data.vehicle_number;
+                document.getElementById('res-qr-wrap').style.display = 'block';
+            }
+
+            // Show action buttons
+            document.getElementById('res-actions').style.display = 'flex';
+
+            // PDF download button (always shown)
+            if (data.pdf_url) {
+                document.getElementById('res-pdf-btn').href = data.pdf_url;
+            }
+
+            // Full receipt link (only if vehicle has exited)
+            if (data.receipt_url) {
+                const receiptLink = document.getElementById('res-receipt');
+                receiptLink.href = data.receipt_url;
+                receiptLink.style.display = 'inline-block';
+            }
+        })
+        .catch((err) => {
+            errorBox.textContent = err.message;
+            errorBox.style.display = 'block';
+        })
+        .finally(() => {
+            loading.style.display = 'none';
+        });
+    });
+});
+</script>
+
+{% endblock %}

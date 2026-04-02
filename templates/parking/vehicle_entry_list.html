@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Active Vehicles</h2>
+<table>
+    <tr><th>Vehicle</th><th>Owner</th><th>Slot</th><th>Entry</th><th>Action</th></tr>
+    {% for v in vehicles %}
+    <tr>
+        <td>{{ v.vehicle_number }}</td>
+        <td>{{ v.owner.username }}</td>
+        <td>{{ v.slot.slot_number }}</td>
+        <td>{{ v.entry_time }}</td>
+        <td><a href="{% url 'parking:vehicle_exit' v.id %}">Exit + Bill</a></td>
+    </tr>
+    {% empty %}<tr><td colspan="5">No active vehicles.</td></tr>{% endfor %}
+</table>
+{% endblock %}

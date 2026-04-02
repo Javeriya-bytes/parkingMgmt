@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>User Dashboard</h2>
+<div class="grid">
+    <div class="card">
+        <h3>Active Vehicle</h3>
+        {% if active_vehicle %}
+            <p>{{ active_vehicle.vehicle_number }} in slot {{ active_vehicle.slot.slot_number }}</p>
+        {% else %}
+            <p>No active vehicle in parking.</p>
+        {% endif %}
+    </div>
+    <div class="card">
+        <h3>Total Bookings</h3>
+        <p>{{ total_bookings }}</p>
+    </div>
+    <div class="card">
+        <h3>Active Bookings</h3>
+        <p>{{ active_bookings }}</p>
+    </div>
+</div>
+<div class="card">
+    <a href="{% url 'booking:book_slot' %}">Book New Slot</a> |
+    <a href="{% url 'booking:my_bookings' %}">View My Bookings</a>
+</div>
+{% endblock %}

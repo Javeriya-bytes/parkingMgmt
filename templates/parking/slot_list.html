@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Parking Slots</h2>
+<form method="get" class="inline-form">
+    <select name="category"><option value="">All Category</option><option value="car" {% if category == 'car' %}selected{% endif %}>Car</option><option value="bike" {% if category == 'bike' %}selected{% endif %}>Bike</option><option value="ev" {% if category == 'ev' %}selected{% endif %}>EV</option></select>
+    <select name="status"><option value="">All Status</option><option value="available" {% if status == 'available' %}selected{% endif %}>Available</option><option value="occupied" {% if status == 'occupied' %}selected{% endif %}>Occupied</option></select>
+    <button type="submit">Filter</button>
+    <a href="{% url 'parking:slot_add' %}">Add Slot</a>
+</form>
+<p>Available: <span id="available-count">{{ available_count }}</span> | Occupied: <span id="occupied-count">{{ occupied_count }}</span></p>
+<div class="grid" id="slots-grid">
+{% for slot in slots %}
+    <div class="slot {% if slot.status == 'available' %}slot-free{% else %}slot-busy{% endif %}" data-slot-number="{{ slot.slot_number }}">
+        <strong>{{ slot.slot_number }}</strong>
+        <p>{{ slot.get_category_display }} | {{ slot.get_slot_type_display }}</p>
+        <p>Status: <span class="slot-status-text">{{ slot.get_status_display }}</span></p>
+        <a href="{% url 'parking:slot_edit' slot.id %}">Edit</a>
+        <a href="{% url 'parking:slot_delete' slot.id %}">Delete</a>
+    </div>
+{% empty %}
+    <p>No slots found.</p>
+{% endfor %}
+</div>
+<script>window.SLOT_API_URL = "{% url 'parking:slot_status_api' %}";</script>
+{% endblock %}

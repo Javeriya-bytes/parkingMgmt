@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card">
+    <h2>Vehicle Exit Details</h2>
+
+```
+<p><strong>Vehicle:</strong> {{ vehicle.vehicle_number }}</p>
+<p><strong>Owner:</strong> {{ vehicle.owner.username }}</p>
+<p><strong>Slot:</strong> {{ vehicle.slot.slot_number }}</p>
+<p><strong>Entry:</strong> {{ vehicle.entry_time }}</p>
+<p><strong>Exit:</strong> {{ vehicle.exit_time }}</p>
+
+<p><strong>Total Amount:</strong> ₹ {{ total }}</p>
+
+<br>
+
+<a href="{% url 'parking:receipt' vehicle.id %}" class="btn">
+    Download Receipt PDF
+</a>
+
+<a href="{% url 'parking:receipt' vehicle.id %}" target="_blank" class="btn">
+    Print Receipt
+</a>
+
+<br><br>
+
+<a href="{% url 'parking:dashboard' %}" class="btn">
+    Back to Dashboard
+</a>
+```
+
+</div>
+
+{% endblock %}

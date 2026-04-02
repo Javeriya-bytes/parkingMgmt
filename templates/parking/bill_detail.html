@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+    <h2>Bill Summary</h2>
+    <p>Vehicle: {{ vehicle.vehicle_number }}</p>
+    <p>Entry: {{ vehicle.entry_time }}</p>
+    <p>Exit: {{ vehicle.exit_time }}</p>
+    <p>Duration: {{ minutes }} minutes</p>
+    <p>Rate: {{ setting.price_rate }} per {{ setting.price_unit }}</p>
+    <p><strong>Total: {{ payment.total_cost }}</strong></p>
+    <p><a href="{{ receipt_url }}">Download PDF Receipt</a></p>
+</div>
+<iframe id="receipt-frame" style="display:none;" title="receipt download"></iframe>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const frame = document.getElementById('receipt-frame');
+        if (frame) frame.src = "{{ receipt_url }}";
+    });
+</script>
+{% endblock %}

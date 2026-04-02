@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>My Bookings</h2>
+<table>
+    <tr><th>Vehicle</th><th>Slot</th><th>Date</th><th>Time</th><th>Duration</th><th>Check-in</th></tr>
+    {% for b in bookings %}
+    <tr>
+        <td>{{ b.vehicle_number }}</td>
+        <td>{{ b.slot.slot_number }}</td>
+        <td>{{ b.date }}</td>
+        <td>{{ b.start_time }}</td>
+        <td>{{ b.duration_minutes }} min</td>
+        <td>
+            {% if b.is_checked_in %}
+                Checked in
+            {% else %}
+                <a href="{% url 'booking:checkin_booking' b.id %}">Check in now</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% empty %}<tr><td colspan="6">No bookings yet.</td></tr>{% endfor %}
+</table>
+{% endblock %}

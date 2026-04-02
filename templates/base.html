@@ -1,0 +1,473 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Parking</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #0b1120;
+            --surface:   #131d30;
+            --surface2:  #1a2640;
+            --border:    rgba(255,255,255,0.07);
+            --accent:    #3ecfcf;
+            --accent2:   #6ee7b7;
+            --text:      #e8f0fe;
+            --muted:     #7a90b0;
+            --danger:    #f87171;
+            --glow:      0 0 24px rgba(62,207,207,0.18);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 20% -10%, rgba(62,207,207,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(110,231,183,0.06) 0%, transparent 60%);
+        }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 36px;
+            height: 64px;
+            background: rgba(11,17,32,0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .topbar h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+        }
+
+        .topbar nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .topbar nav a,
+        .nav-link-btn {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: color 0.2s, background 0.2s;
+            letter-spacing: 0.01em;
+        }
+
+        .topbar nav a:hover,
+        .nav-link-btn:hover {
+            color: var(--text);
+            background: var(--surface2);
+        }
+
+        .topbar nav a.active {
+            color: var(--accent);
+            background: rgba(62,207,207,0.08);
+        }
+
+        .nav-link-btn {
+            color: var(--danger);
+            border: 1px solid rgba(248,113,113,0.2);
+        }
+
+        .nav-link-btn:hover {
+            background: rgba(248,113,113,0.1);
+            color: var(--danger);
+        }
+
+        /* ── CONTAINER ── */
+        .container {
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 36px 24px 60px;
+        }
+
+        /* ── MESSAGES ── */
+        .msg {
+            padding: 12px 18px;
+            margin-bottom: 16px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            background: rgba(62,207,207,0.08);
+            border: 1px solid rgba(62,207,207,0.2);
+            color: var(--accent);
+            animation: fadeSlide 0.3s ease;
+        }
+
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 24px;
+            transition: box-shadow 0.3s, border-color 0.3s, transform 0.3s;
+        }
+
+        .card:hover {
+            border-color: rgba(62,207,207,0.2);
+            box-shadow: var(--glow);
+            transform: translateY(-2px);
+        }
+
+        .card h2, .card h3 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .card p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .card p strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* ── STAT CARDS (dashboard) ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px 22px;
+            position: relative;
+            overflow: hidden;
+            cursor: default;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(62,207,207,0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 8px 32px rgba(62,207,207,0.12);
+            border-color: rgba(62,207,207,0.25);
+        }
+
+        .stat-card:hover::before { opacity: 1; }
+
+        .stat-card .stat-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+
+        .stat-card .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .stat-card .stat-sub {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        /* ── BUTTONS ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #0b1120;
+            font-weight: 700;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(62,207,207,0.35);
+            filter: brightness(1.05);
+        }
+
+        .btn-secondary {
+            background: var(--surface2);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: rgba(62,207,207,0.3);
+            color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: rgba(248,113,113,0.1);
+            color: var(--danger);
+            border: 1px solid rgba(248,113,113,0.2);
+        }
+
+        .btn-danger:hover {
+            background: rgba(248,113,113,0.2);
+            transform: translateY(-1px);
+        }
+
+        /* ── FORMS ── */
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="date"],
+        select, textarea {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 11px 16px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            margin-bottom: 16px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(62,207,207,0.1);
+        }
+
+        button[type="submit"], button.btn {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #0b1120;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 11px 28px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+        }
+
+        button[type="submit"]:hover, button.btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(62,207,207,0.3);
+            filter: brightness(1.05);
+        }
+
+        /* ── TABLES ── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        thead th {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover {
+            background: rgba(62,207,207,0.04);
+        }
+
+        /* ── BADGES ── */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        .badge-green {
+            background: rgba(110,231,183,0.12);
+            color: var(--accent2);
+            border: 1px solid rgba(110,231,183,0.2);
+        }
+
+        .badge-red {
+            background: rgba(248,113,113,0.1);
+            color: var(--danger);
+            border: 1px solid rgba(248,113,113,0.2);
+        }
+
+        .badge-blue {
+            background: rgba(62,207,207,0.1);
+            color: var(--accent);
+            border: 1px solid rgba(62,207,207,0.2);
+        }
+
+        /* ── PAGE TITLE ── */
+        .page-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+            background: linear-gradient(90deg, var(--text), var(--muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--muted);
+            font-size: 0.875rem;
+            margin-bottom: 28px;
+        }
+
+        /* ── LINKS ── */
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        a:hover { opacity: 0.8; }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <h1>Smart Parking Management System</h1>
+        <nav>
+            {% if user.is_authenticated %}
+                <a href="{% url 'accounts:redirect' %}">Home</a>
+                {% if user.role == 'admin' %}
+                    <a href="{% url 'parking:dashboard' %}">Dashboard</a>
+                    <a href="{% url 'parking:slot_list' %}">Slots</a>
+                    <a href="{% url 'parking:vehicle_entries' %}">Vehicles</a>
+                    <a href="{% url 'parking:history' %}">History</a>
+                    <a href="{% url 'parking:settings' %}">Settings</a>
+                {% else %}
+                    <a href="{% url 'booking:my_bookings' %}">My Bookings</a>
+                    <a href="{% url 'booking:book_slot' %}">Book Slot</a>
+                {% endif %}
+                <a href="{% url 'parking:qr_scanner' %}">QR Scanner</a>
+                <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link-btn">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'accounts:login' %}">Login</a>
+                <a href="{% url 'accounts:register' %}">Register</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <p class="msg">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        // Highlight active nav link
+        document.querySelectorAll('.topbar nav a').forEach(link => {
+            if (link.href === window.location.href) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
